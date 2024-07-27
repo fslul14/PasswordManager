@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}User Home{% endblock %}
+
+{% block content %}
+    <h2>User Home</h2>
+
+    <!-- Password Strength Requirements Message -->
+    <div class="password-requirements">
+        <h3>Password Strength Requirements</h3>
+        <p>
+            When adding or editing passwords, please ensure they meet the following criteria:
+            <ul>
+                <li>Between 8 and 16 characters long</li>
+                <li>Contains at least 1 uppercase letter (A-Z)</li>
+                <li>Contains at least 1 lowercase letter (a-z)</li>
+                <li>Contains at least 1 special character (e.g., !, @, #, $)</li>
+            </ul>
+        </p>
+    </div>
+
+    <!-- Form to Add a New Password -->
+    <h3>Add a New Password</h3>
+    <form method="POST" action="{{ url_for('password_manager.add_password') }}">
+        <label for="website">Website:</label>
+        <input type="text" id="website" name="website" required>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Add Password</button>
+        <!-- Suggest Password Button -->
+        <button type="button" onclick="suggestPassword()">Suggest Password</button>
+    </form>
+
+    <!-- Display Suggested Password -->
+    <div id="suggested-password" style="margin-top: 20px;">
+        <p><strong>Suggested Password:</strong> <span id="suggested-password-value"></span></p>
+    </div>
+
+    <!-- Display Existing Passwords -->
+    <h3>Your Passwords</h3>
+    {% if passwords %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Website</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Strength</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for website, creds in passwords.items() %}
+                <tr>
+                    <td>{{ website }}</td>
+                    <td>{{ creds.username }}</td>
+                    <td>
+                        <span class="password" id="password-{{ loop.index }}" style="display: none;">
+                            {{ creds.password }}
+                        </span>
+                        <button type="button" onclick="togglePasswordVisibility({{ loop.index }})">
+                            Show
+                        </button>
+                    </td>
+                    <td>
+                        {% if creds.strength == 'Weak' %}
+                            <span style="color: red;">Weak</span>
+                        {% else %}
+                            <span style="color: green;">Strong</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="table-buttons">
+                            <form method="POST" action="{{ url_for('password_manager.edit_password') }}">
+                                <input type="hidden" name="website" value="{{ website }}">
+                                <input type="text" name="username" placeholder="New Username" required>
+                                <input type="password" name="password" placeholder="New Password" required>
+                                <button type="submit">Edit</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('password_manager.delete_password', website=website) }}">
+                                <button type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No passwords found.</p>
+    {% endif %}
+
+    <script>
+        function suggestPassword() {
+            fetch("{{ url_for('password_manager.suggest_password') }}")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('suggested-password-value').innerText = data.password;
+                });
+        }
+
+        function togglePasswordVisibility(index) {
+            var passwordSpan = document.getElementById('password-' + index);
+            var button = event.target;
+            if (passwordSpan.style.display === 'none') {
+                passwordSpan.style.display = 'inline';
+                button.textContent = 'Hide';
+            } else {
+                passwordSpan.style.display = 'none';
+                button.textContent = 'Show';
+            }
+        }
+    </script>
+{% endblock %}
