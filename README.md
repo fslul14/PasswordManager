@@ -76,4 +76,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Feel free to customize this `README.md` with any additional information or sections relevant to your project.
